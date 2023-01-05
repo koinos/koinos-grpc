@@ -17,7 +17,7 @@ using namespace std::chrono_literals;
 
 struct services_fixture
 {
-   mempool_fixture()
+   services_fixture()
    {
       std::string seed1 = "alpha bravo charlie delta";
       _key1 = crypto::private_key::regenerate( crypto::hash( crypto::multicodec::sha2_256, seed1 ) );
@@ -42,4 +42,6 @@ BOOST_FIXTURE_TEST_SUITE( services_tests, services_fixture )
 
 BOOST_AUTO_TEST_CASE( services_basic_test )
 {
+}
+
 }

@@ -47,7 +47,7 @@ using namespace boost;
 using namespace koinos;
 
 const std::string& version_string();
-using timer_func_type = std::function< void( const boost::system::error_code&, std::shared_ptr< koinos::mempool::mempool >, std::chrono::seconds ) >;
+//using timer_func_type = std::function< void( const boost::system::error_code&, std::shared_ptr< koinos::mempool::mempool >, std::chrono::seconds ) >;
 
 int main( int argc, char** argv )
 {
@@ -61,32 +61,32 @@ int main( int argc, char** argv )
    auto client = koinos::mq::client( client_ioc );
    auto timer = boost::asio::system_timer( server_ioc );
 
-   timer_func_type timer_func = [&]( const boost::system::error_code& ec, std::shared_ptr< koinos::mempool::mempool > mpool, std::chrono::seconds exp_time )
-   {
-      static uint64_t pruned_count = 0;
-      static auto last_message = std::chrono::system_clock::now();
-
-      if ( ec == boost::asio::error::operation_aborted )
-         return;
-
-      pruned_count += mpool->prune( exp_time );
-
-      auto now = std::chrono::system_clock::now();
-      if ( now - last_message >= 1min )
-      {
-         LOG(info) << "Recently added " << recently_added_count << " transaction(s)";
-
-         if ( pruned_count )
-            LOG(info) << "Pruned " << pruned_count << " transaction(s) from mempool";
-
-         recently_added_count = 0;
-         pruned_count = 0;
-         last_message = now;
-      }
-
-      timer.expires_after( 1s );
-      timer.async_wait( boost::bind( timer_func, boost::asio::placeholders::error, mpool, exp_time ) );
-   };
+//   timer_func_type timer_func = [&]( const boost::system::error_code& ec, std::shared_ptr< koinos::mempool::mempool > mpool, std::chrono::seconds exp_time )
+//   {
+//      static uint64_t pruned_count = 0;
+//      static auto last_message = std::chrono::system_clock::now();
+//
+//      if ( ec == boost::asio::error::operation_aborted )
+//         return;
+//
+//      pruned_count += mpool->prune( exp_time );
+//
+//      auto now = std::chrono::system_clock::now();
+//      if ( now - last_message >= 1min )
+//      {
+//         LOG(info) << "Recently added " << recently_added_count << " transaction(s)";
+//
+//         if ( pruned_count )
+//            LOG(info) << "Pruned " << pruned_count << " transaction(s) from mempool";
+//
+//         recently_added_count = 0;
+//         pruned_count = 0;
+//         last_message = now;
+//      }
+//
+//      timer.expires_after( 1s );
+//      timer.async_wait( boost::bind( timer_func, boost::asio::placeholders::error, mpool, exp_time ) );
+//   };
 
    try
    {
@@ -177,8 +177,8 @@ int main( int argc, char** argv )
       for ( std::size_t i = 0; i < jobs; i++ )
          threads.emplace_back( [&]() { server_ioc.run(); } );
 
-      timer.expires_after( 1s );
-      timer.async_wait( boost::bind( timer_func, boost::asio::placeholders::error, mempool, tx_expiration ) );
+//      timer.expires_after( 1s );
+//      timer.async_wait( boost::bind( timer_func, boost::asio::placeholders::error, mempool, tx_expiration ) );
 
       LOG(info) << "Connecting AMQP client...";
       client.connect( amqp_url );
