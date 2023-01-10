@@ -1,4 +1,4 @@
-file(GLOB HEADERS "include/koinos/grpc/*.hpp")
+file(GLOB HEADERS "include/koinos/services/*.hpp")
 add_library(koinos_services_lib
             services.cpp
             ${HEADERS})

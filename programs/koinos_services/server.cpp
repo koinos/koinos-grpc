@@ -12,6 +12,11 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <grpcpp/security/server_credentials.h>
+#include <grpcpp/server.h>
+#include <grpcpp/server_builder.h>
+#include <grpcpp/server_context.h>
+
 #include <koinos/broadcast/broadcast.pb.h>
 #include <koinos/exception.hpp>
 #include <koinos/services/services.hpp>
@@ -48,6 +53,7 @@ using namespace koinos;
 
 const std::string& version_string();
 //using timer_func_type = std::function< void( const boost::system::error_code&, std::shared_ptr< koinos::mempool::mempool >, std::chrono::seconds ) >;
+void run_server( mq::client& c );
 
 int main( int argc, char** argv )
 {
@@ -189,8 +195,9 @@ int main( int argc, char** argv )
       LOG(info) << "Established request handler connection to the AMQP server";
 
       LOG(info) << "Listening for requests";
-      auto work = asio::make_work_guard( main_ioc );
+//      auto work = asio::make_work_guard( main_ioc );
       main_ioc.run();
+      run_server( client );
    }
    catch ( const invalid_argument& e )
    {
@@ -233,8 +240,22 @@ int main( int argc, char** argv )
 
 const std::string& version_string()
 {
-   static std::string v_str = "Koinos gRPC v";
+   static std::string v_str = "Koinos Services v";
    v_str += std::to_string( KOINOS_MAJOR_VERSION ) + "." + std::to_string( KOINOS_MINOR_VERSION ) + "." + std::to_string( KOINOS_PATCH_VERSION );
    v_str += " (" + std::string( KOINOS_GIT_HASH ) + ")";
    return v_str;
+}
+
+void run_server( mq::client& c ) {
+  std::string server_address( "0.0.0.0:50051" );
+  services::mempool_service mempool_svc( c );
+  services::account_history_service account_history_svc( c );
+
+  ::grpc::ServerBuilder builder;
+  builder.AddListeningPort( server_address, ::grpc::InsecureServerCredentials() );
+  builder.RegisterService( &mempool_svc );
+  builder.RegisterService( &account_history_svc );
+  std::unique_ptr< ::grpc::Server > server( builder.BuildAndStart() );
+  LOG(info) << "Server listening on " << server_address;
+  server->Wait();
 }
