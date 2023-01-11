@@ -22,6 +22,7 @@ namespace koinos::services {
 // Global callback implementation
 
 callbacks::callbacks( std::atomic< uint64_t >& req_count ) : _request_count( req_count ) {}
+callbacks::~callbacks() {}
 
 void callbacks::PreSynchronousRequest( grpc_impl::ServerContext* context )
 {

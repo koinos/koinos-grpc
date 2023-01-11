@@ -167,9 +167,9 @@ int main( int argc, char** argv )
       builder.RegisterService( &mempool_svc );
       builder.RegisterService( &account_history_svc );
 
-      std::unique_ptr< ::grpc::Server > server( builder.BuildAndStart() );
+      ::grpc::Server::SetGlobalCallbacks( &callbacks );
 
-      server->SetGlobalCallbacks( &callbacks );
+      std::unique_ptr< ::grpc::Server > server( builder.BuildAndStart() );
 
       signals.async_wait( [&]( const boost::system::error_code& err, int num )
       {

@@ -18,6 +18,7 @@ namespace koinos::services {
 class callbacks final : public ::grpc::Server::GlobalCallbacks {
 public:
    callbacks( std::atomic< uint64_t >& req_count );
+   ~callbacks() override;
 
    virtual void PreSynchronousRequest(grpc_impl::ServerContext* context) override;
     /// Called after application callback for each synchronous server request
