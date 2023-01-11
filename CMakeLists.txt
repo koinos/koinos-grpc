@@ -32,10 +32,16 @@ set(
 
 include("cmake/HunterGate.cmake")
 
+#HunterGate(
+#   URL "https://github.com/cpp-pm/hunter/archive/v0.23.313.tar.gz"
+#   SHA1 "6c369e5aab2749a616917df3b23511535f413604"
+#   LOCAL
+#)
+
 HunterGate(
-   URL "https://github.com/cpp-pm/hunter/archive/v0.23.313.tar.gz"
-   SHA1 "6c369e5aab2749a616917df3b23511535f413604"
-   LOCAL
+    URL "https://github.com/cpp-pm/hunter/archive/v0.24.14.tar.gz"
+    SHA1 "00901c19eefc02d24b16705b5f5a2b4f093a73fb"
+    LOCAL
 )
 
 project(koinos_services VERSION 0.0.1 LANGUAGES CXX C)

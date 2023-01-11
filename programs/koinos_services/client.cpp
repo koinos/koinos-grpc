@@ -35,7 +35,7 @@ int main( int argc, char** argv )
    std::string target_address("0.0.0.0:50051");
    auto channel = ::grpc::CreateChannel( target_address, grpc::InsecureChannelCredentials() );
 
-   std::unique_ptr< koinos::services::account_history::Stub > stub;
+   std::unique_ptr< koinos::services::account_history::Stub > stub( koinos::services::account_history::NewStub( channel ) );
 
    koinos::rpc::account_history::get_account_history_request request;
 

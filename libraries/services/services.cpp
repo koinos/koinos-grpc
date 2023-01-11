@@ -76,16 +76,19 @@ account_history_service::account_history_service( mq::client& c ) : _client( c )
 {
    try
    {
+      std::cout << "Got request: " << *request << std::endl;
       auto future = _client.rpc( "account_history", util::converter::as< std::string >( *request ), 750ms, mq::retry_policy::none );
       rpc::account_history::get_account_history_response resp;
       response->ParseFromString( future.get() );
    }
    catch ( const std::exception& e )
    {
+      std::cout << "Exception: " << e.what() << std::endl;
       return ::grpc::Status( ::grpc::StatusCode::INTERNAL, e.what() );
    }
    catch ( ... )
    {
+      std::cout << "Unknown exception" << std::endl;
       return ::grpc::Status( ::grpc::StatusCode::UNKNOWN, "an unknown exception has occurred" );
    }
 
