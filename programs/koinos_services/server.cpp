@@ -30,6 +30,10 @@
 
 #include "git_version.h"
 
+#define FIFO_ALGORITHM                 "fifo"
+#define BLOCK_TIME_ALGORITHM           "block-time"
+#define POB_ALGORITHM                  "pob"
+
 #define HELP_OPTION                    "help"
 #define VERSION_OPTION                 "version"
 #define BASEDIR_OPTION                 "basedir"
@@ -49,7 +53,6 @@ using namespace koinos;
 
 const std::string& version_string();
 //using timer_func_type = std::function< void( const boost::system::error_code&, std::shared_ptr< koinos::mempool::mempool >, std::chrono::seconds ) >;
-void run_server( mq::client& c );
 
 int main( int argc, char** argv )
 {
@@ -58,7 +61,7 @@ int main( int argc, char** argv )
    std::vector< std::thread > threads;
    std::atomic< uint64_t > recently_added_count = 0;
 
-   boost::asio::io_context server_ioc, client_ioc;
+   boost::asio::io_context main_ioc, server_ioc, client_ioc;
    auto request_handler = koinos::mq::request_handler( server_ioc );
    auto client = koinos::mq::client( client_ioc );
    auto timer = boost::asio::system_timer( server_ioc );
@@ -166,10 +169,22 @@ int main( int argc, char** argv )
       signals.add( SIGQUIT );
 #endif
 
+      std::string server_address( "0.0.0.0:50051" );
+      services::mempool_service mempool_svc( client );
+      services::account_history_service account_history_svc( client );
+
+      ::grpc::ServerBuilder builder;
+      builder.AddListeningPort( server_address, ::grpc::InsecureServerCredentials() );
+      builder.RegisterService( &mempool_svc );
+      builder.RegisterService( &account_history_svc );
+      std::unique_ptr< ::grpc::Server > server( builder.BuildAndStart() );
+
       signals.async_wait( [&]( const boost::system::error_code& err, int num )
       {
          LOG(info) << "Caught signal, shutting down...";
          stopped = true;
+         main_ioc.stop();
+         server->Shutdown();
       } );
 
       threads.emplace_back( [&]() { client_ioc.run(); } );
@@ -189,9 +204,10 @@ int main( int argc, char** argv )
       request_handler.connect( amqp_url );
       LOG(info) << "Established request handler connection to the AMQP server";
 
-      LOG(info) << "Listening for requests";
+      main_ioc.run();
 
-      run_server( client );
+      LOG(info) << "Listening for requests on " << server_address;
+      server->Wait();
    }
    catch ( const invalid_argument& e )
    {
@@ -238,18 +254,4 @@ const std::string& version_string()
    v_str += std::to_string( KOINOS_MAJOR_VERSION ) + "." + std::to_string( KOINOS_MINOR_VERSION ) + "." + std::to_string( KOINOS_PATCH_VERSION );
    v_str += " (" + std::string( KOINOS_GIT_HASH ) + ")";
    return v_str;
-}
-
-void run_server( mq::client& c ) {
-  std::string server_address( "0.0.0.0:50051" );
-  services::mempool_service mempool_svc( c );
-  services::account_history_service account_history_svc( c );
-
-  ::grpc::ServerBuilder builder;
-  builder.AddListeningPort( server_address, ::grpc::InsecureServerCredentials() );
-  builder.RegisterService( &mempool_svc );
-  builder.RegisterService( &account_history_svc );
-  std::unique_ptr< ::grpc::Server > server( builder.BuildAndStart() );
-  LOG(info) << "Server listening on " << server_address;
-  server->Wait();
 }
