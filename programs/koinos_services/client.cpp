@@ -40,6 +40,7 @@ int main( int argc, char** argv )
    koinos::rpc::account_history::get_account_history_request request;
 
    request.set_address( koinos::util::from_base58< std::string >( std::string{ "1NsQbH5AhQXgtSNg1ejpFqTi2hmCWz1eQS" } ) );
+   request.set_limit( 10 );
 
    // Container for server response
    koinos::rpc::account_history::get_account_history_response response;
