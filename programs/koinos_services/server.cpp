@@ -30,10 +30,6 @@
 
 #include "git_version.h"
 
-#define FIFO_ALGORITHM                 "fifo"
-#define BLOCK_TIME_ALGORITHM           "block-time"
-#define POB_ALGORITHM                  "pob"
-
 #define HELP_OPTION                    "help"
 #define VERSION_OPTION                 "version"
 #define BASEDIR_OPTION                 "basedir"
@@ -52,46 +48,32 @@ using namespace boost;
 using namespace koinos;
 
 const std::string& version_string();
-//using timer_func_type = std::function< void( const boost::system::error_code&, std::shared_ptr< koinos::mempool::mempool >, std::chrono::seconds ) >;
+using timer_func_type = std::function< void( const boost::system::error_code& ) >;
+
+using namespace std::chrono_literals;
 
 int main( int argc, char** argv )
 {
    std::atomic< bool > stopped = false;
    int retcode = EXIT_SUCCESS;
    std::vector< std::thread > threads;
-   std::atomic< uint64_t > recently_added_count = 0;
+   std::atomic< uint64_t > request_count = 0;
 
-   boost::asio::io_context main_ioc, server_ioc, client_ioc;
+   boost::asio::io_context server_ioc, client_ioc;
    auto request_handler = koinos::mq::request_handler( server_ioc );
    auto client = koinos::mq::client( client_ioc );
    auto timer = boost::asio::system_timer( server_ioc );
+   koinos::services::callbacks callbacks( request_count );
 
-//   timer_func_type timer_func = [&]( const boost::system::error_code& ec, std::shared_ptr< koinos::mempool::mempool > mpool, std::chrono::seconds exp_time )
-//   {
-//      static uint64_t pruned_count = 0;
-//      static auto last_message = std::chrono::system_clock::now();
-//
-//      if ( ec == boost::asio::error::operation_aborted )
-//         return;
-//
-//      pruned_count += mpool->prune( exp_time );
-//
-//      auto now = std::chrono::system_clock::now();
-//      if ( now - last_message >= 1min )
-//      {
-//         LOG(info) << "Recently added " << recently_added_count << " transaction(s)";
-//
-//         if ( pruned_count )
-//            LOG(info) << "Pruned " << pruned_count << " transaction(s) from mempool";
-//
-//         recently_added_count = 0;
-//         pruned_count = 0;
-//         last_message = now;
-//      }
-//
-//      timer.expires_after( 1s );
-//      timer.async_wait( boost::bind( timer_func, boost::asio::placeholders::error, mpool, exp_time ) );
-//   };
+   timer_func_type timer_func = [&]( const boost::system::error_code& ec )
+   {
+      LOG(info) << "Recently handled " << request_count << " request(s)";
+
+      request_count = 0;
+
+      timer.expires_after( 1min );
+      timer.async_wait( boost::bind( timer_func, boost::asio::placeholders::error ) );
+   };
 
    try
    {
@@ -128,7 +110,7 @@ int main( int argc, char** argv )
 
       YAML::Node config;
       YAML::Node global_config;
-      YAML::Node mempool_config;
+      YAML::Node services_config;
 
       auto yaml_config = basedir / "config.yml";
       if ( !std::filesystem::exists( yaml_config ) )
@@ -139,15 +121,17 @@ int main( int argc, char** argv )
       if ( std::filesystem::exists( yaml_config ) )
       {
          config = YAML::LoadFile( yaml_config );
-         global_config = config[ "global" ];
-         mempool_config = config[ util::service::mempool ];
+         global_config   = config[ "global" ];
+#pragma message "Replace 'services' string with util constant"
+         services_config = config[ "services" ];
       }
 
-      auto amqp_url           = util::get_option< std::string >( AMQP_OPTION, AMQP_DEFAULT, args, mempool_config, global_config );
-      auto log_level          = util::get_option< std::string >( LOG_LEVEL_OPTION, LOG_LEVEL_DEFAULT, args, mempool_config, global_config );
-      auto instance_id        = util::get_option< std::string >( INSTANCE_ID_OPTION, util::random_alphanumeric( 5 ), args, mempool_config, global_config );
-      auto jobs               = util::get_option< uint64_t >( JOBS_OPTION, std::max( JOBS_DEFAULT, uint64_t( std::thread::hardware_concurrency() ) ), args, mempool_config, global_config );
+      auto amqp_url           = util::get_option< std::string >( AMQP_OPTION, AMQP_DEFAULT, args, services_config, global_config );
+      auto log_level          = util::get_option< std::string >( LOG_LEVEL_OPTION, LOG_LEVEL_DEFAULT, args, services_config, global_config );
+      auto instance_id        = util::get_option< std::string >( INSTANCE_ID_OPTION, util::random_alphanumeric( 5 ), args, services_config, global_config );
+      auto jobs               = util::get_option< uint64_t >( JOBS_OPTION, std::max( JOBS_DEFAULT, uint64_t( std::thread::hardware_concurrency() ) ), args, services_config, global_config );
 
+#pragma message "Replace 'services' string with util constant"
       koinos::initialize_logging( "services", instance_id, log_level, basedir / "services" / "logs" );
 
       LOG(info) << version_string();
@@ -169,21 +153,28 @@ int main( int argc, char** argv )
       signals.add( SIGQUIT );
 #endif
 
+#pragma message "Make services address configurable"
       std::string server_address( "0.0.0.0:50051" );
+
+      // Instantiate our services
       services::mempool_service mempool_svc( client );
       services::account_history_service account_history_svc( client );
 
       ::grpc::ServerBuilder builder;
       builder.AddListeningPort( server_address, ::grpc::InsecureServerCredentials() );
+
+      // Register our services
       builder.RegisterService( &mempool_svc );
       builder.RegisterService( &account_history_svc );
+
       std::unique_ptr< ::grpc::Server > server( builder.BuildAndStart() );
+
+      server->SetGlobalCallbacks( &callbacks );
 
       signals.async_wait( [&]( const boost::system::error_code& err, int num )
       {
          LOG(info) << "Caught signal, shutting down...";
          stopped = true;
-         main_ioc.stop();
          server->Shutdown();
       } );
 
@@ -193,8 +184,8 @@ int main( int argc, char** argv )
       for ( std::size_t i = 0; i < jobs; i++ )
          threads.emplace_back( [&]() { server_ioc.run(); } );
 
-//      timer.expires_after( 1s );
-//      timer.async_wait( boost::bind( timer_func, boost::asio::placeholders::error, mempool, tx_expiration ) );
+      timer.expires_after( 1min );
+      timer.async_wait( boost::bind( timer_func, boost::asio::placeholders::error ) );
 
       LOG(info) << "Connecting AMQP client...";
       client.connect( amqp_url );
@@ -203,8 +194,6 @@ int main( int argc, char** argv )
       LOG(info) << "Connecting AMQP request handler...";
       request_handler.connect( amqp_url );
       LOG(info) << "Established request handler connection to the AMQP server";
-
-      main_ioc.run();
 
       LOG(info) << "Listening for requests on " << server_address;
       server->Wait();

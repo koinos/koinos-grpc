@@ -5,6 +5,8 @@
 #include <utility>
 #include <vector>
 
+#include <grpcpp/server.h>
+
 #include <koinos/crypto/multihash.hpp>
 #include <koinos/exception.hpp>
 #include <koinos/mq/client.hpp>
@@ -12,6 +14,18 @@
 #include <koinos/rpc/services.grpc.pb.h>
 
 namespace koinos::services {
+
+class callbacks final : public ::grpc::Server::GlobalCallbacks {
+public:
+   callbacks( std::atomic< uint64_t >& req_count );
+
+   virtual void PreSynchronousRequest(grpc_impl::ServerContext* context) override;
+    /// Called after application callback for each synchronous server request
+   virtual void PostSynchronousRequest(grpc_impl::ServerContext* context) override;
+
+private:
+   std::atomic< uint64_t >& _request_count;
+};
 
 class mempool_service final : public mempool::Service {
 public:
