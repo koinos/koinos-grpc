@@ -30,10 +30,6 @@
 
 #include "git_version.h"
 
-#define FIFO_ALGORITHM                 "fifo"
-#define BLOCK_TIME_ALGORITHM           "block-time"
-#define POB_ALGORITHM                  "pob"
-
 #define HELP_OPTION                    "help"
 #define VERSION_OPTION                 "version"
 #define BASEDIR_OPTION                 "basedir"
@@ -62,7 +58,7 @@ int main( int argc, char** argv )
    std::vector< std::thread > threads;
    std::atomic< uint64_t > recently_added_count = 0;
 
-   boost::asio::io_context main_ioc, server_ioc, client_ioc;
+   boost::asio::io_context server_ioc, client_ioc;
    auto request_handler = koinos::mq::request_handler( server_ioc );
    auto client = koinos::mq::client( client_ioc );
    auto timer = boost::asio::system_timer( server_ioc );
@@ -174,7 +170,6 @@ int main( int argc, char** argv )
       {
          LOG(info) << "Caught signal, shutting down...";
          stopped = true;
-         main_ioc.stop();
       } );
 
       threads.emplace_back( [&]() { client_ioc.run(); } );
@@ -195,8 +190,7 @@ int main( int argc, char** argv )
       LOG(info) << "Established request handler connection to the AMQP server";
 
       LOG(info) << "Listening for requests";
-//      auto work = asio::make_work_guard( main_ioc );
-      main_ioc.run();
+
       run_server( client );
    }
    catch ( const invalid_argument& e )

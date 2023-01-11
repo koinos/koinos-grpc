@@ -76,21 +76,33 @@ account_history_service::account_history_service( mq::client& c ) : _client( c )
 {
    try
    {
-      std::cout << "Got request: " << *request << std::endl;
-      auto future = _client.rpc( "account_history", util::converter::as< std::string >( *request ), 750ms, mq::retry_policy::none );
-      rpc::account_history::get_account_history_response resp;
-      response->ParseFromString( future.get() );
+      LOG(info) << "Got request: " << *request;
+      ::koinos::rpc::account_history::account_history_request req;
+      *req.mutable_get_account_history() = *request;
+      auto future = _client.rpc( "account_history", util::converter::as< std::string >( req ), 750ms, mq::retry_policy::none );
+      rpc::account_history::account_history_response resp;
+      resp.ParseFromString( future.get() );
+
+      KOINOS_ASSERT( resp.has_get_account_history(), koinos::exception, "unexpected response type" );
+      *response = resp.get_account_history();
+   }
+   catch ( const koinos::exception& e )
+   {
+      LOG(info) << "Exception: " << e.get_message();
+      return ::grpc::Status( ::grpc::StatusCode::INTERNAL, e.what() );
    }
    catch ( const std::exception& e )
    {
-      std::cout << "Exception: " << e.what() << std::endl;
+      LOG(info) << "Exception: " << e.what();
       return ::grpc::Status( ::grpc::StatusCode::INTERNAL, e.what() );
    }
    catch ( ... )
    {
-      std::cout << "Unknown exception" << std::endl;
+      LOG(info) << "Unknown exception";
       return ::grpc::Status( ::grpc::StatusCode::UNKNOWN, "an unknown exception has occurred" );
    }
+
+   LOG(info) << "Response OK";
 
    return ::grpc::Status::OK;
 }
