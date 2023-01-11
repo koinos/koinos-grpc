@@ -86,7 +86,7 @@ if(COVERAGE)
   setup_target_for_coverage_lcov(
      NAME coverage
      LCOV_ARGS "--quiet" "--no-external"
-     EXECUTABLE koinos_mempool_tests
+     EXECUTABLE koinos_services_tests
      EXCLUDE
         "build/*"
         "libraries/crypto/*"
