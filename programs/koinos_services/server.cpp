@@ -63,7 +63,6 @@ int main( int argc, char** argv )
    auto request_handler = koinos::mq::request_handler( server_ioc );
    auto client = koinos::mq::client( client_ioc );
    auto timer = boost::asio::system_timer( server_ioc );
-   koinos::services::callbacks callbacks( request_count );
 
    timer_func_type timer_func = [&]( const boost::system::error_code& ec )
    {
@@ -167,7 +166,7 @@ int main( int argc, char** argv )
       builder.RegisterService( &mempool_svc );
       builder.RegisterService( &account_history_svc );
 
-      ::grpc::Server::SetGlobalCallbacks( &callbacks );
+      ::grpc::Server::SetGlobalCallbacks( new koinos::services::callbacks( request_count ) );
 
       std::unique_ptr< ::grpc::Server > server( builder.BuildAndStart() );
 
