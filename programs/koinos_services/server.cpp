@@ -176,6 +176,7 @@ int main( int argc, char** argv )
          LOG(info) << "Caught signal, shutting down...";
          stopped = true;
          server->Shutdown();
+         server_ioc.stop();
       } );
 
       threads.emplace_back( [&]() { client_ioc.run(); } );
