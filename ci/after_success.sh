@@ -11,5 +11,5 @@ if ! [[ -z $BUILD_DOCKER ]]; then
    fi
 
    echo "$DOCKER_PASSWORD" | docker login -u $DOCKER_USERNAME --password-stdin
-   docker push koinos/koinos-services:$TAG
+   docker push koinos/koinos-grpc:$TAG
 fi
