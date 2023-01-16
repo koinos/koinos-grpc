@@ -5,6 +5,8 @@
 #include <utility>
 #include <vector>
 
+#include <boost/preprocessor/cat.hpp>
+
 #include <grpcpp/server.h>
 
 #include <koinos/crypto/multihash.hpp>
@@ -12,6 +14,11 @@
 #include <koinos/mq/client.hpp>
 
 #include <koinos/rpc/services.grpc.pb.h>
+
+#define GRPC_SYNC_METHOD_DECLARATION( svc, method )                      \
+virtual ::grpc::Status method( ::grpc::ServerContext* context,           \
+const ::koinos::rpc::svc::BOOST_PP_CAT(method, _request*) request,       \
+::koinos::rpc::svc::BOOST_PP_CAT(method, _response*) response ) override
 
 namespace koinos::services {
 
@@ -33,15 +40,8 @@ public:
 
    explicit mempool_service( mq::client& c );
 
-   virtual ::grpc::Status get_pending_transactions(
-      ::grpc::ServerContext* context,
-      const ::koinos::rpc::mempool::get_pending_transactions_request* request,
-      ::koinos::rpc::mempool::get_pending_transactions_response* response ) override;
-
-   virtual ::grpc::Status check_pending_account_resources(
-      ::grpc::ServerContext* context,
-      const ::koinos::rpc::mempool::check_pending_account_resources_request* request,
-      ::koinos::rpc::mempool::check_pending_account_resources_response* response ) override;
+   GRPC_SYNC_METHOD_DECLARATION( mempool, get_pending_transactions );
+   GRPC_SYNC_METHOD_DECLARATION( mempool, check_pending_account_resources );
 
 private:
 
@@ -53,10 +53,7 @@ public:
 
    explicit account_history_service( mq::client& c );
 
-   virtual ::grpc::Status get_account_history(
-      ::grpc::ServerContext* context,
-      const ::koinos::rpc::account_history::get_account_history_request* request,
-      ::koinos::rpc::account_history::get_account_history_response* response ) override;
+   GRPC_SYNC_METHOD_DECLARATION( account_history, get_account_history );
 
 private:
 
