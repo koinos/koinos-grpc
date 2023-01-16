@@ -49,13 +49,13 @@ endfunction()
 
 parse_unit_tests(TEST_CASES ${UNIT_TESTS})
 
-add_boost_test(koinos_services_tests
+add_boost_test(koinos_grpc_tests
    SOURCES ${UNIT_TESTS} ${TEST_FIXTURES}
    TESTS ${TEST_CASES}
 )
 
-target_link_libraries(koinos_services_tests Koinos::proto Koinos::services Koinos::crypto Koinos::exception ${PLATFORM_SPECIFIC_LIBS})
-target_include_directories(koinos_services_tests PUBLIC
+target_link_libraries(koinos_grpc_tests Koinos::proto Koinos::grpc Koinos::crypto Koinos::exception ${PLATFORM_SPECIFIC_LIBS})
+target_include_directories(koinos_grpc_tests PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>  # <prefix>/include
 )

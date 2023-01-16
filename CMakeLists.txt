@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.10.2)
 
+cmake_policy(SET CMP0074 NEW)
+
 include("cmake/CheckGit.cmake")
 CheckGitSetup()
 
@@ -44,7 +46,7 @@ HunterGate(
     LOCAL
 )
 
-project(koinos_services VERSION 0.0.1 LANGUAGES CXX C)
+project(koinos_grpc VERSION 0.0.1 LANGUAGES CXX C)
 add_compile_definitions(KOINOS_MAJOR_VERSION=${PROJECT_VERSION_MAJOR})
 add_compile_definitions(KOINOS_MINOR_VERSION=${PROJECT_VERSION_MINOR})
 add_compile_definitions(KOINOS_PATCH_VERSION=${PROJECT_VERSION_PATCH})
@@ -86,7 +88,7 @@ if(COVERAGE)
   setup_target_for_coverage_lcov(
      NAME coverage
      LCOV_ARGS "--quiet" "--no-external"
-     EXECUTABLE koinos_services_tests
+     EXECUTABLE koinos_grpc_tests
      EXCLUDE
         "build/*"
         "libraries/crypto/*"

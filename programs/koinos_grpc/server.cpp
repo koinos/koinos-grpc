@@ -19,7 +19,7 @@
 
 #include <koinos/broadcast/broadcast.pb.h>
 #include <koinos/exception.hpp>
-#include <koinos/services/services.hpp>
+#include <koinos/grpc/grpc.hpp>
 #include <koinos/mq/client.hpp>
 #include <koinos/mq/request_handler.hpp>
 #include <koinos/rpc/mempool/mempool_rpc.pb.h>

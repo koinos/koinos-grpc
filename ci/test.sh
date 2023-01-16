@@ -8,7 +8,7 @@ if [ "$RUN_TYPE" = "test" ]; then
    exec ctest -j3 --output-on-failure
 elif [ "$RUN_TYPE" = "coverage" ]; then
    cd $(dirname "$0")/../build/tests
-   exec valgrind --error-exitcode=1 --leak-check=yes ./koinos_services_tests
+   exec valgrind --error-exitcode=1 --leak-check=yes ./koinos_grpc_tests
 fi
 
 if ! [[ -z $BUILD_DOCKER ]]; then

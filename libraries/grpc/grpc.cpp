@@ -13,7 +13,7 @@
 #include <koinos/util/hex.hpp>
 #include <koinos/util/services.hpp>
 
-#include <koinos/services/services.hpp>
+#include <koinos/grpc/grpc.hpp>
 
 using namespace std::chrono_literals;
 

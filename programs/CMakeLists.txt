@@ -1,1 +1,1 @@
-add_subdirectory(koinos_services)
+add_subdirectory(koinos_grpc)

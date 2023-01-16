@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include <koinos/services/services.hpp>
+#include <koinos/grpc/grpc.hpp>
 
 #include <koinos/chain/value.pb.h>
 #include <koinos/crypto/elliptic.hpp>
@@ -15,9 +15,9 @@
 using namespace koinos;
 using namespace std::chrono_literals;
 
-struct services_fixture
+struct grpc_fixture
 {
-   services_fixture()
+   grpc_fixture()
    {
       std::string seed1 = "alpha bravo charlie delta";
       _key1 = crypto::private_key::regenerate( crypto::hash( crypto::multicodec::sha2_256, seed1 ) );
@@ -38,9 +38,9 @@ struct services_fixture
    crypto::private_key _key4;
 };
 
-BOOST_FIXTURE_TEST_SUITE( services_tests, services_fixture )
+BOOST_FIXTURE_TEST_SUITE( grpc_tests, grpc_fixture )
 
-BOOST_AUTO_TEST_CASE( services_basic_test )
+BOOST_AUTO_TEST_CASE( grpc_basic_test )
 {
 }
 
