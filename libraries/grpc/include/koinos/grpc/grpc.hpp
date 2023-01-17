@@ -5,7 +5,9 @@
 #include <utility>
 #include <vector>
 
-#include <boost/preprocessor/cat.hpp>
+#include <boost/preprocessor.hpp>
+#include <boost/preprocessor/seq/for_each.hpp>
+#include <boost/preprocessor/punctuation/comma.hpp>
 
 #include <grpcpp/server.h>
 
@@ -15,10 +17,12 @@
 
 #include <koinos/rpc/services.grpc.pb.h>
 
-#define GRPC_SYNC_METHOD_DECLARATION( svc, method )                      \
+#define _GRPC_SYNC_METHOD_DECLARATION( r, svc, method )                      \
 virtual ::grpc::Status method( ::grpc::ServerContext* context,           \
 const ::koinos::rpc::svc::BOOST_PP_CAT(method, _request*) request,       \
-::koinos::rpc::svc::BOOST_PP_CAT(method, _response*) response ) override
+::koinos::rpc::svc::BOOST_PP_CAT(method, _response*) response ) override;
+
+#define GRPC_SYNC_METHOD_DECLARATIONS( svc, args ) BOOST_PP_SEQ_FOR_EACH( _GRPC_SYNC_METHOD_DECLARATION, svc, args )
 
 namespace koinos::services {
 
@@ -27,9 +31,9 @@ public:
    callbacks( std::atomic< uint64_t >& req_count );
    ~callbacks() override;
 
-   virtual void PreSynchronousRequest(grpc_impl::ServerContext* context) override;
+   virtual void PreSynchronousRequest( grpc_impl::ServerContext* context ) override;
     /// Called after application callback for each synchronous server request
-   virtual void PostSynchronousRequest(grpc_impl::ServerContext* context) override;
+   virtual void PostSynchronousRequest( grpc_impl::ServerContext* context ) override;
 
 private:
    std::atomic< uint64_t >& _request_count;
@@ -40,8 +44,10 @@ public:
 
    explicit mempool_service( mq::client& c );
 
-   GRPC_SYNC_METHOD_DECLARATION( mempool, get_pending_transactions );
-   GRPC_SYNC_METHOD_DECLARATION( mempool, check_pending_account_resources );
+   GRPC_SYNC_METHOD_DECLARATIONS( mempool,
+      (get_pending_transactions)
+      (check_pending_account_resources)
+   );
 
 private:
 
@@ -53,7 +59,9 @@ public:
 
    explicit account_history_service( mq::client& c );
 
-   GRPC_SYNC_METHOD_DECLARATION( account_history, get_account_history );
+   GRPC_SYNC_METHOD_DECLARATIONS( account_history,
+      (get_account_history)
+   );
 
 private:
 

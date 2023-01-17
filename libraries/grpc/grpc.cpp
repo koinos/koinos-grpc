@@ -15,7 +15,7 @@
 
 #include <koinos/grpc/grpc.hpp>
 
-#define GRPC_SYNC_METHOD_DEFINITION( svc, method )                                    \
+#define _GRPC_SYNC_METHOD_DEFINITION( r, svc, method )                                \
 ::grpc::Status BOOST_PP_CAT( svc, _service )::method( ::grpc::ServerContext* context, \
 const ::koinos::rpc::svc::BOOST_PP_CAT(method, _request*) request,                    \
 ::koinos::rpc::svc::BOOST_PP_CAT(method, _response*) response )                       \
@@ -51,6 +51,8 @@ const ::koinos::rpc::svc::BOOST_PP_CAT(method, _request*) request,              
    return ::grpc::Status::OK;                                                         \
 }
 
+#define GRPC_SYNC_METHOD_DEFINITIONS( svc, args ) BOOST_PP_SEQ_FOR_EACH( _GRPC_SYNC_METHOD_DEFINITION, svc, args )
+
 using namespace std::chrono_literals;
 
 namespace koinos::services {
@@ -71,13 +73,17 @@ void callbacks::PostSynchronousRequest( grpc_impl::ServerContext* context ) {}
 
 mempool_service::mempool_service( mq::client& c ) : _client( c ) {}
 
-GRPC_SYNC_METHOD_DEFINITION( mempool, get_pending_transactions );
-GRPC_SYNC_METHOD_DEFINITION( mempool, check_pending_account_resources );
+GRPC_SYNC_METHOD_DEFINITIONS( mempool,
+   (get_pending_transactions)
+   (check_pending_account_resources)
+);
 
 // Account history implementation
 
 account_history_service::account_history_service( mq::client& c ) : _client( c ) {}
 
-GRPC_SYNC_METHOD_DEFINITION( account_history, get_account_history );
+GRPC_SYNC_METHOD_DEFINITIONS( account_history,
+   (get_account_history)
+);
 
 } // koinos::services
