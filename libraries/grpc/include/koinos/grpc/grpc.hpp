@@ -42,7 +42,7 @@ private:
 class mempool_service final : public mempool::Service {
 public:
 
-   explicit mempool_service( mq::client& c );
+   explicit mempool_service( mq::client& c, std::chrono::seconds timeout );
 
    GRPC_SYNC_METHOD_DECLARATIONS( mempool,
       (get_pending_transactions)
@@ -52,12 +52,13 @@ public:
 private:
 
    mq::client& _client;
+   std::chrono::seconds _timeout;
 };
 
 class account_history_service final : public account_history::Service {
 public:
 
-   explicit account_history_service( mq::client& c );
+   explicit account_history_service( mq::client& c, std::chrono::seconds timeout );
 
    GRPC_SYNC_METHOD_DECLARATIONS( account_history,
       (get_account_history)
@@ -66,6 +67,7 @@ public:
 private:
 
    mq::client& _client;
+   std::chrono::seconds _timeout;
 };
 
 
