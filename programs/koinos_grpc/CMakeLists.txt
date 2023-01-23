@@ -3,7 +3,7 @@ file(GLOB HEADERS "include/*.hpp")
 add_executable(koinos_grpc
                server.cpp
                ${HEADERS})
-target_link_libraries(koinos_grpc PUBLIC Koinos::grpc Koinos::crypto Koinos::exception Koinos::proto Koinos::log Koinos::mq Koinos::git Boost::program_options yaml-cpp gRPC::grpc gRPC::grpc++ protobuf::libprotobuf)
+target_link_libraries(koinos_grpc PUBLIC Koinos::grpc Koinos::crypto Koinos::exception Koinos::proto Koinos::log Koinos::mq Koinos::git Boost::program_options yaml-cpp gRPC::grpc++ protobuf::libprotobuf)
 target_include_directories(koinos_grpc PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 install(TARGETS
    koinos_grpc
