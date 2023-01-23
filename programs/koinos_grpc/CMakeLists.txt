@@ -15,7 +15,7 @@ install(TARGETS
 add_executable(koinos_grpc_client
                client.cpp
                ${HEADERS})
-target_link_libraries(koinos_grpc_client PUBLIC Koinos::grpc Koinos::crypto Koinos::exception Koinos::proto Koinos::log Koinos::mq Koinos::git Boost::program_options yaml-cpp gRPC::grpc gRPC::grpc++ protobuf::libprotobuf)
+target_link_libraries(koinos_grpc_client PUBLIC Koinos::grpc Koinos::crypto Koinos::exception Koinos::proto Koinos::log Koinos::mq Koinos::git Boost::program_options yaml-cpp gRPC::grpc++ protobuf::libprotobuf)
 target_include_directories(koinos_grpc_client PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 install(TARGETS
    koinos_grpc_client
