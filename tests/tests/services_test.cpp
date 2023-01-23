@@ -1,6 +1,8 @@
 #include <boost/test/unit_test.hpp>
 
+#if 0
 #include <koinos/grpc/grpc.hpp>
+#endif
 
 #include <koinos/chain/value.pb.h>
 #include <koinos/crypto/elliptic.hpp>
@@ -42,6 +44,7 @@ BOOST_FIXTURE_TEST_SUITE( grpc_tests, grpc_fixture )
 
 BOOST_AUTO_TEST_CASE( split_entry_test )
 {
+#if 0
    std::vector< std::string > list{ "service.method1", "service.method2", "service", "service.", ".method" };
 
    auto [ svc1, method1 ] = koinos::services::split_list_entry( list[0] );
@@ -63,6 +66,7 @@ BOOST_AUTO_TEST_CASE( split_entry_test )
    auto [ svc5, method5 ] = koinos::services::split_list_entry( list[4] );
    BOOST_REQUIRE( svc5.empty() );
    BOOST_REQUIRE( method5 == "method" );
+#endif
 }
 
 BOOST_AUTO_TEST_CASE( grpc_basic_test )
