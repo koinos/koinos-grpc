@@ -54,7 +54,7 @@ add_boost_test(koinos_grpc_tests
    TESTS ${TEST_CASES}
 )
 
-target_link_libraries(koinos_grpc_tests Koinos::proto Koinos::grpc Koinos::crypto Koinos::exception Koinos::mq gRPC::grpc gRPC::grpc++ protobuf::libprotobuf ${PLATFORM_SPECIFIC_LIBS})
+target_link_libraries(koinos_grpc_tests Koinos::proto Koinos::grpc Koinos::crypto Koinos::exception Koinos::mq gRPC::grpc++ protobuf::libprotobuf ${PLATFORM_SPECIFIC_LIBS})
 target_include_directories(koinos_grpc_tests PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>  # <prefix>/include
