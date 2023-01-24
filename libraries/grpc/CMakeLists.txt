@@ -1,5 +1,5 @@
 file(GLOB HEADERS "include/koinos/grpc/*.hpp")
-add_library(koinos_grpc_lib
+add_library(koinos_grpc_lib OBJECT
             grpc.cpp
             ${HEADERS})
 target_link_libraries(koinos_grpc_lib Koinos::exception Koinos::log Koinos::util gRPC::grpc)
