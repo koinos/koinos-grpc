@@ -201,16 +201,14 @@ int main( int argc, char** argv )
          .blacklist = blacklist
       };
 
-      // Instantiate our services
-      services::mempool_service mempool_svc( svc_config );
-      services::account_history_service account_history_svc( svc_config );
+      // Instantiate our service
+      services::koinos_service koinos_svc( svc_config );
 
       ::grpc::ServerBuilder builder;
       builder.AddListeningPort( endpoint, ::grpc::InsecureServerCredentials() );
 
-      // Register our services
-      builder.RegisterService( &mempool_svc );
-      builder.RegisterService( &account_history_svc );
+      // Register our service
+      builder.RegisterService( &koinos_svc );
 
       ::grpc::Server::SetGlobalCallbacks( new koinos::services::callbacks( request_count ) );
 

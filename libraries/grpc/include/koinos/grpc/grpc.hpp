@@ -49,32 +49,50 @@ private:
    std::atomic< uint64_t >& _request_count;
 };
 
-class mempool_service final : public mempool::Service {
+class koinos_service final : public koinos::Service {
 public:
 
-   explicit mempool_service( configuration& cfg );
+   explicit koinos_service( configuration& cfg );
 
    std::pair< bool, std::string > call_permitted( const std::string& service, const std::string& method );
+
+   GRPC_SYNC_METHOD_DECLARATIONS( account_history,
+      (get_account_history)
+   );
+
+   GRPC_SYNC_METHOD_DECLARATIONS( block_store,
+      (get_blocks_by_id)
+      (get_blocks_by_height)
+      (get_highest_block)
+   );
+
+   GRPC_SYNC_METHOD_DECLARATIONS( chain,
+      (submit_block)
+      (submit_transaction)
+      (get_head_info)
+      (get_chain_id)
+      (get_fork_heads)
+      (read_contract)
+      (get_account_nonce)
+      (get_account_rc)
+      (get_resource_limits)
+   );
+
+   GRPC_SYNC_METHOD_DECLARATIONS( contract_meta_store,
+      (get_contract_meta)
+   );
 
    GRPC_SYNC_METHOD_DECLARATIONS( mempool,
       (get_pending_transactions)
       (check_pending_account_resources)
    );
 
-private:
+   GRPC_SYNC_METHOD_DECLARATIONS( p2p,
+      (get_gossip_status)
+   );
 
-   configuration& _config;
-};
-
-class account_history_service final : public account_history::Service {
-public:
-
-   explicit account_history_service( configuration& cfg );
-
-   std::pair< bool, std::string > call_permitted( const std::string& service, const std::string& method );
-
-   GRPC_SYNC_METHOD_DECLARATIONS( account_history,
-      (get_account_history)
+   GRPC_SYNC_METHOD_DECLARATIONS( transaction_store,
+      (get_transactions_by_id)
    );
 
 private:

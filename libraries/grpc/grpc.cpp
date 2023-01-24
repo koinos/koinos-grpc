@@ -16,7 +16,7 @@
 #include <koinos/grpc/grpc.hpp>
 
 #define _GRPC_SYNC_METHOD_DEFINITION( r, svc, method )                                  \
-::grpc::Status BOOST_PP_CAT( svc, _service )::method( ::grpc::ServerContext* context,   \
+::grpc::Status koinos_service::method( ::grpc::ServerContext* context,                  \
 const ::koinos::rpc::svc::BOOST_PP_CAT(method, _request*) request,                      \
 ::koinos::rpc::svc::BOOST_PP_CAT(method, _response*) response )                         \
 {                                                                                       \
@@ -34,11 +34,11 @@ const ::koinos::rpc::svc::BOOST_PP_CAT(method, _request*) request,              
          mq::retry_policy::none );                                                      \
       rpc::svc::BOOST_PP_CAT( svc, _response ) resp;                                    \
       resp.ParseFromString( future.get() );                                             \
-      KOINOS_ASSERT( BOOST_PP_CAT( resp.has_, method )(),                               \
-         koinos::exception, "unexpected response type" );                               \
+      if ( ! BOOST_PP_CAT( resp.has_, method )() ) \
+         throw ::koinos::exception( "unexpected response type" );                             \
       *response = resp.method();                                                        \
    }                                                                                    \
-   catch ( const koinos::exception& e )                                                 \
+   catch ( const ::koinos::exception& e )                                               \
    {                                                                                    \
       LOG(warning) << "An exception has occurred: " << e.get_message();                 \
       return ::grpc::Status( ::grpc::StatusCode::INTERNAL, e.what() );                  \
@@ -87,73 +87,11 @@ void callbacks::PreSynchronousRequest( grpc_impl::ServerContext* context )
 
 void callbacks::PostSynchronousRequest( grpc_impl::ServerContext* context ) {}
 
-// Mempool service implementation
+// Koinos service implementation
 
-mempool_service::mempool_service( configuration& cfg ) : _config( cfg ) {}
+koinos_service::koinos_service( configuration& cfg ) : _config( cfg ) {}
 
-std::pair< bool, std::string > mempool_service::call_permitted( const std::string& service, const std::string& method )
-{
-   if ( _config.whitelist.size() )
-   {
-      bool in_whitelist = false;
-
-      for ( const auto& entry : _config.whitelist )
-      {
-         const auto& [ svc, fn ] = split_list_entry( entry );
-
-         // Entire service was whitelist
-         if ( service == svc )
-         {
-            if ( fn.empty() )
-            {
-               in_whitelist = true;
-               break;
-            }
-         }
-         // Check if this particular method is whitelisted
-         else if ( method == fn )
-         {
-            in_whitelist = true;
-            break;
-         }
-      }
-
-      if ( !in_whitelist )
-         return std::make_pair( false, "method not whitelisted" );
-   }
-
-   for ( const auto& entry : _config.blacklist )
-   {
-      const auto& [ svc, fn ] = split_list_entry( entry );
-
-      // Entire service was whitelist
-      if ( service == svc )
-      {
-         if ( fn.empty() )
-         {
-            return std::make_pair( false, "method is blacklisted" );
-         }
-      }
-      // Check if this particular method is whitelisted
-      else if ( method == fn )
-      {
-         return std::make_pair( false, "method is blacklisted" );
-      }
-   }
-
-   return std::make_pair( true, std::string{} );
-}
-
-GRPC_SYNC_METHOD_DEFINITIONS( mempool,
-   (get_pending_transactions)
-   (check_pending_account_resources)
-);
-
-// Account history implementation
-
-account_history_service::account_history_service( configuration& cfg ) : _config( cfg ) {}
-
-std::pair< bool, std::string > account_history_service::call_permitted( const std::string& service, const std::string& method )
+std::pair< bool, std::string > koinos_service::call_permitted( const std::string& service, const std::string& method )
 {
    if ( _config.whitelist.size() )
    {
@@ -208,6 +146,41 @@ std::pair< bool, std::string > account_history_service::call_permitted( const st
 
 GRPC_SYNC_METHOD_DEFINITIONS( account_history,
    (get_account_history)
+);
+
+GRPC_SYNC_METHOD_DEFINITIONS( block_store,
+   (get_blocks_by_id)
+   (get_blocks_by_height)
+   (get_highest_block)
+);
+
+GRPC_SYNC_METHOD_DEFINITIONS( chain,
+   (submit_block)
+   (submit_transaction)
+   (get_head_info)
+   (get_chain_id)
+   (get_fork_heads)
+   (read_contract)
+   (get_account_nonce)
+   (get_account_rc)
+   (get_resource_limits)
+);
+
+GRPC_SYNC_METHOD_DEFINITIONS( contract_meta_store,
+   (get_contract_meta)
+);
+
+GRPC_SYNC_METHOD_DEFINITIONS( mempool,
+   (get_pending_transactions)
+   (check_pending_account_resources)
+);
+
+GRPC_SYNC_METHOD_DEFINITIONS( p2p,
+   (get_gossip_status)
+);
+
+GRPC_SYNC_METHOD_DEFINITIONS( transaction_store,
+   (get_transactions_by_id)
 );
 
 } // koinos::services
