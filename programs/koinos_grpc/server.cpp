@@ -40,6 +40,11 @@
 #define INSTANCE_ID_OPTION             "instance-id"
 #define JOBS_OPTION                    "jobs"
 #define JOBS_DEFAULT                   uint64_t( 2 )
+#define MQ_TIMEOUT_OPTION              "mq-timeout"
+#define MQ_TIMEOUT_DEFAULT             5
+#define ENDPOINT_OPTION                "endpoint"
+#define ENDPOINT_DEFAULT               "0.0.0.0:50051"
+
 
 KOINOS_DECLARE_EXCEPTION( service_exception );
 KOINOS_DECLARE_DERIVED_EXCEPTION( invalid_argument, service_exception );
@@ -84,7 +89,9 @@ int main( int argc, char** argv )
          (AMQP_OPTION                  ",a", program_options::value< std::string >(), "AMQP server URL")
          (LOG_LEVEL_OPTION             ",l", program_options::value< std::string >(), "The log filtering level")
          (INSTANCE_ID_OPTION           ",i", program_options::value< std::string >(), "An ID that uniquely identifies the instance")
-         (JOBS_OPTION                  ",j", program_options::value< uint64_t >(), "The number of worker jobs");
+         (JOBS_OPTION                  ",j", program_options::value< uint64_t >(), "The number of worker jobs")
+         (MQ_TIMEOUT_OPTION            ",m", program_options::value< uint64_t >(), "The timeout for MQ requests")
+         (ENDPOINT_OPTION              ",e", program_options::value< std::string >(), "The endpoint the server listens on");
 
       program_options::variables_map args;
       program_options::store( program_options::parse_command_line( argc, argv, options ), args );
@@ -109,7 +116,7 @@ int main( int argc, char** argv )
 
       YAML::Node config;
       YAML::Node global_config;
-      YAML::Node services_config;
+      YAML::Node grpc_config;
 
       auto yaml_config = basedir / "config.yml";
       if ( !std::filesystem::exists( yaml_config ) )
@@ -121,17 +128,17 @@ int main( int argc, char** argv )
       {
          config = YAML::LoadFile( yaml_config );
          global_config   = config[ "global" ];
-#pragma message "Replace 'services' string with util constant"
-         services_config = config[ "services" ];
+         grpc_config = config[ util::service::grpc ];
       }
 
-      auto amqp_url           = util::get_option< std::string >( AMQP_OPTION, AMQP_DEFAULT, args, services_config, global_config );
-      auto log_level          = util::get_option< std::string >( LOG_LEVEL_OPTION, LOG_LEVEL_DEFAULT, args, services_config, global_config );
-      auto instance_id        = util::get_option< std::string >( INSTANCE_ID_OPTION, util::random_alphanumeric( 5 ), args, services_config, global_config );
-      auto jobs               = util::get_option< uint64_t >( JOBS_OPTION, std::max( JOBS_DEFAULT, uint64_t( std::thread::hardware_concurrency() ) ), args, services_config, global_config );
+      auto amqp_url    = util::get_option< std::string >( AMQP_OPTION, AMQP_DEFAULT, args, grpc_config, global_config );
+      auto log_level   = util::get_option< std::string >( LOG_LEVEL_OPTION, LOG_LEVEL_DEFAULT, args, grpc_config, global_config );
+      auto instance_id = util::get_option< std::string >( INSTANCE_ID_OPTION, util::random_alphanumeric( 5 ), args, grpc_config, global_config );
+      auto jobs        = util::get_option< uint64_t >( JOBS_OPTION, std::max( JOBS_DEFAULT, uint64_t( std::thread::hardware_concurrency() ) ), args, grpc_config, global_config );
+      auto mq_timeout  = util::get_option< uint64_t >( MQ_TIMEOUT_OPTION, MQ_TIMEOUT_DEFAULT, args, grpc_config, global_config );
+      auto endpoint    = util::get_option< std::string >( ENDPOINT_OPTION, ENDPOINT_DEFAULT, args, grpc_config, global_config );
 
-#pragma message "Replace 'services' string with util constant"
-      koinos::initialize_logging( "services", instance_id, log_level, basedir / "services" / "logs" );
+      koinos::initialize_logging( util::service::grpc, instance_id, log_level, basedir / util::service::grpc / "logs" );
 
       LOG(info) << version_string();
 
@@ -152,15 +159,12 @@ int main( int argc, char** argv )
       signals.add( SIGQUIT );
 #endif
 
-#pragma message "Make services address configurable"
-      std::string server_address( "0.0.0.0:50051" );
-
       // Instantiate our services
-      services::mempool_service mempool_svc( client );
-      services::account_history_service account_history_svc( client );
+      services::mempool_service mempool_svc( client, std::chrono::seconds{ mq_timeout } );
+      services::account_history_service account_history_svc( client, std::chrono::seconds{ mq_timeout } );
 
       ::grpc::ServerBuilder builder;
-      builder.AddListeningPort( server_address, ::grpc::InsecureServerCredentials() );
+      builder.AddListeningPort( endpoint, ::grpc::InsecureServerCredentials() );
 
       // Register our services
       builder.RegisterService( &mempool_svc );
@@ -195,7 +199,7 @@ int main( int argc, char** argv )
       request_handler.connect( amqp_url );
       LOG(info) << "Established request handler connection to the AMQP server";
 
-      LOG(info) << "Listening for requests on " << server_address;
+      LOG(info) << "Listening for requests on " << endpoint;
       server->Wait();
    }
    catch ( const invalid_argument& e )
