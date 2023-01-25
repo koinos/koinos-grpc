@@ -26,6 +26,16 @@ const ::koinos::rpc::svc::BOOST_PP_CAT(method, _request*) request,       \
 
 namespace koinos::services {
 
+bool entry_matches( const std::vector< std::string >& list, std::string service, std::string method );
+std::pair< std::string, std::string > split_list_entry( const std::string& entry );
+
+struct configuration {
+   mq::client& client;
+   std::chrono::seconds timeout;
+   std::vector< std::string > whitelist;
+   std::vector< std::string > blacklist;
+};
+
 class callbacks final : public ::grpc::Server::GlobalCallbacks {
 public:
    callbacks( std::atomic< uint64_t >& req_count );
@@ -42,7 +52,9 @@ private:
 class mempool_service final : public mempool::Service {
 public:
 
-   explicit mempool_service( mq::client& c, std::chrono::seconds timeout );
+   explicit mempool_service( configuration& cfg );
+
+   std::pair< bool, std::string > call_permitted( const std::string& service, const std::string& method );
 
    GRPC_SYNC_METHOD_DECLARATIONS( mempool,
       (get_pending_transactions)
@@ -51,14 +63,15 @@ public:
 
 private:
 
-   mq::client& _client;
-   std::chrono::seconds _timeout;
+   configuration& _config;
 };
 
 class account_history_service final : public account_history::Service {
 public:
 
-   explicit account_history_service( mq::client& c, std::chrono::seconds timeout );
+   explicit account_history_service( configuration& cfg );
+
+   std::pair< bool, std::string > call_permitted( const std::string& service, const std::string& method );
 
    GRPC_SYNC_METHOD_DECLARATIONS( account_history,
       (get_account_history)
@@ -66,8 +79,7 @@ public:
 
 private:
 
-   mq::client& _client;
-   std::chrono::seconds _timeout;
+   configuration& _config;
 };
 
 

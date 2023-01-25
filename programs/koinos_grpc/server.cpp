@@ -1,9 +1,11 @@
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <csignal>
 #include <filesystem>
 #include <iostream>
 #include <mutex>
+#include <vector>
 
 #include <boost/asio.hpp>
 #include <boost/asio/signal_set.hpp>
@@ -44,7 +46,12 @@
 #define MQ_TIMEOUT_DEFAULT             5
 #define ENDPOINT_OPTION                "endpoint"
 #define ENDPOINT_DEFAULT               "0.0.0.0:50051"
+#define WHITELIST_OPTION               "whitelist"
+#define BLACKLIST_OPTION               "blacklist"
 
+namespace constants {
+   const std::string qualified_name_prefix = "koinos.rpc.";
+}
 
 KOINOS_DECLARE_EXCEPTION( service_exception );
 KOINOS_DECLARE_DERIVED_EXCEPTION( invalid_argument, service_exception );
@@ -91,7 +98,9 @@ int main( int argc, char** argv )
          (INSTANCE_ID_OPTION           ",i", program_options::value< std::string >(), "An ID that uniquely identifies the instance")
          (JOBS_OPTION                  ",j", program_options::value< uint64_t >(), "The number of worker jobs")
          (MQ_TIMEOUT_OPTION            ",m", program_options::value< uint64_t >(), "The timeout for MQ requests")
-         (ENDPOINT_OPTION              ",e", program_options::value< std::string >(), "The endpoint the server listens on");
+         (ENDPOINT_OPTION              ",e", program_options::value< std::string >(), "The endpoint the server listens on")
+         (WHITELIST_OPTION             ",w", program_options::value< std::vector< std::string > >(), "RPC targets to whitelist")
+         (BLACKLIST_OPTION             ",b", program_options::value< std::vector< std::string > >(), "RPC targets to blacklist");
 
       program_options::variables_map args;
       program_options::store( program_options::parse_command_line( argc, argv, options ), args );
@@ -137,6 +146,8 @@ int main( int argc, char** argv )
       auto jobs        = util::get_option< uint64_t >( JOBS_OPTION, std::max( JOBS_DEFAULT, uint64_t( std::thread::hardware_concurrency() ) ), args, grpc_config, global_config );
       auto mq_timeout  = util::get_option< uint64_t >( MQ_TIMEOUT_OPTION, MQ_TIMEOUT_DEFAULT, args, grpc_config, global_config );
       auto endpoint    = util::get_option< std::string >( ENDPOINT_OPTION, ENDPOINT_DEFAULT, args, grpc_config, global_config );
+      auto whitelist   = util::get_options< std::string >( WHITELIST_OPTION, args, grpc_config, global_config );
+      auto blacklist   = util::get_options< std::string >( BLACKLIST_OPTION, args, grpc_config, global_config );
 
       koinos::initialize_logging( util::service::grpc, instance_id, log_level, basedir / util::service::grpc / "logs" );
 
@@ -152,6 +163,30 @@ int main( int argc, char** argv )
       LOG(info) << "Starting services...";
       LOG(info) << "Number of jobs: " << jobs;
 
+      if ( whitelist.size() )
+      {
+         std::string entries;
+         for ( auto& entry : whitelist )
+         {
+            entries += entry;
+            if ( &entry != &whitelist.back() )
+               entries += " ";
+         }
+         LOG(info) << "Whitelist: [" << entries << "]";
+      }
+
+      if ( blacklist.size() )
+      {
+         std::string entries;
+         for ( auto& entry : blacklist )
+         {
+            entries += entry;
+            if ( &entry != &blacklist.back() )
+               entries += " ";
+         }
+         LOG(info) << "Blacklist: [" << entries << "]";
+      }
+
       boost::asio::signal_set signals( server_ioc );
       signals.add( SIGINT );
       signals.add( SIGTERM );
@@ -159,9 +194,16 @@ int main( int argc, char** argv )
       signals.add( SIGQUIT );
 #endif
 
+      services::configuration svc_config {
+         .client    = client,
+         .timeout   = std::chrono::seconds{ mq_timeout },
+         .whitelist = whitelist,
+         .blacklist = blacklist
+      };
+
       // Instantiate our services
-      services::mempool_service mempool_svc( client, std::chrono::seconds{ mq_timeout } );
-      services::account_history_service account_history_svc( client, std::chrono::seconds{ mq_timeout } );
+      services::mempool_service mempool_svc( svc_config );
+      services::account_history_service account_history_svc( svc_config );
 
       ::grpc::ServerBuilder builder;
       builder.AddListeningPort( endpoint, ::grpc::InsecureServerCredentials() );
