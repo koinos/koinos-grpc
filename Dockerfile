@@ -22,6 +22,8 @@ WORKDIR /koinos-grpc
 
 ENV CC=/usr/lib/ccache/bin/gcc
 ENV CXX=/usr/lib/ccache/bin/g++
+ENV GRPC_TRACE=all
+ENV GRPC_VERBOSITY=DEBUG
 
 RUN mkdir -p /koinos-grpc/.ccache && \
     ln -s /koinos-grpc/.ccache $HOME/.ccache && \
