@@ -34,14 +34,20 @@ const ::koinos::rpc::svc::BOOST_PP_CAT(method, _request*) request,              
          mq::retry_policy::none );                                                      \
       rpc::svc::BOOST_PP_CAT( svc, _response ) resp;                                    \
       resp.ParseFromString( future.get() );                                             \
-      if ( ! BOOST_PP_CAT( resp.has_, method )() ) \
-         throw ::koinos::exception( "unexpected response type" );                             \
+      if ( resp.has_error() )                                                           \
+         throw ::koinos::exception(                                                     \
+            uint32_t( ::grpc::StatusCode::INVALID_ARGUMENT ),                           \
+            resp.error().message() );                                                   \
+      else if ( ! BOOST_PP_CAT( resp.has_, method )() )                                 \
+         throw ::koinos::exception(                                                     \
+            uint32_t( ::grpc::StatusCode::INTERNAL ),                                   \
+            "unexpected response type" );                                               \
       *response = resp.method();                                                        \
    }                                                                                    \
    catch ( const ::koinos::exception& e )                                               \
    {                                                                                    \
       LOG(warning) << "An exception has occurred: " << e.get_message();                 \
-      return ::grpc::Status( ::grpc::StatusCode::INTERNAL, e.what() );                  \
+      return ::grpc::Status( ::grpc::StatusCode( e.get_code() ), e.what() );            \
    }                                                                                    \
    catch ( const std::exception& e )                                                    \
    {                                                                                    \
