@@ -39,6 +39,10 @@
 #define AMQP_DEFAULT                   "amqp://guest:guest@localhost:5672/"
 #define LOG_LEVEL_OPTION               "log-level"
 #define LOG_LEVEL_DEFAULT              "info"
+#define LOG_DIR_OPTION                 "log-dir"
+#define LOG_DIR_DEFAULT                ""
+#define LOG_COLOR_OPTION               "log-color"
+#define LOG_COLOR_DEFAULT              false
 #define INSTANCE_ID_OPTION             "instance-id"
 #define JOBS_OPTION                    "jobs"
 #define JOBS_DEFAULT                   uint64_t( 2 )
@@ -100,7 +104,9 @@ int main( int argc, char** argv )
          (MQ_TIMEOUT_OPTION            ",m", program_options::value< uint64_t >(), "The timeout for MQ requests")
          (ENDPOINT_OPTION              ",e", program_options::value< std::string >(), "The endpoint the server listens on")
          (WHITELIST_OPTION             ",w", program_options::value< std::vector< std::string > >(), "RPC targets to whitelist")
-         (BLACKLIST_OPTION             ",b", program_options::value< std::vector< std::string > >(), "RPC targets to blacklist");
+         (BLACKLIST_OPTION             ",b", program_options::value< std::vector< std::string > >(), "RPC targets to blacklist")
+         (LOG_DIR_OPTION                   , program_options::value< std::string >(), "The logging directory")
+         (LOG_COLOR_OPTION                 , program_options::value< bool >(), "Log color toggle");
 
       program_options::variables_map args;
       program_options::store( program_options::parse_command_line( argc, argv, options ), args );
@@ -142,6 +148,8 @@ int main( int argc, char** argv )
 
       auto amqp_url    = util::get_option< std::string >( AMQP_OPTION, AMQP_DEFAULT, args, grpc_config, global_config );
       auto log_level   = util::get_option< std::string >( LOG_LEVEL_OPTION, LOG_LEVEL_DEFAULT, args, grpc_config, global_config );
+      auto log_dir     = util::get_option< std::string >( LOG_DIR_OPTION, LOG_DIR_DEFAULT, args, grpc_config, global_config );
+      auto log_color   = util::get_option< bool >( LOG_COLOR_OPTION, LOG_COLOR_DEFAULT, args, grpc_config, global_config );
       auto instance_id = util::get_option< std::string >( INSTANCE_ID_OPTION, util::random_alphanumeric( 5 ), args, grpc_config, global_config );
       auto jobs        = util::get_option< uint64_t >( JOBS_OPTION, std::max( JOBS_DEFAULT, uint64_t( std::thread::hardware_concurrency() ) ), args, grpc_config, global_config );
       auto mq_timeout  = util::get_option< uint64_t >( MQ_TIMEOUT_OPTION, MQ_TIMEOUT_DEFAULT, args, grpc_config, global_config );
@@ -149,7 +157,15 @@ int main( int argc, char** argv )
       auto whitelist   = util::get_options< std::string >( WHITELIST_OPTION, args, grpc_config, global_config );
       auto blacklist   = util::get_options< std::string >( BLACKLIST_OPTION, args, grpc_config, global_config );
 
-      koinos::initialize_logging( util::service::grpc, instance_id, log_level, basedir / util::service::grpc / "logs" );
+      std::optional< std::filesystem::path > logdir_path;
+      if ( !log_dir.empty() )
+      {
+         logdir_path = std::make_optional< std::filesystem::path >( log_dir );
+         if ( logdir_path->is_relative() )
+            logdir_path = basedir / util::service::grpc / *logdir_path;
+      }
+
+      koinos::initialize_logging( util::service::grpc, instance_id, log_level, logdir_path, log_color );
 
       LOG(info) << version_string();
 
