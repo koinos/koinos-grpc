@@ -34,19 +34,13 @@ set(
 
 include("cmake/HunterGate.cmake")
 
-#HunterGate(
-#   URL "https://github.com/cpp-pm/hunter/archive/v0.23.313.tar.gz"
-#   SHA1 "6c369e5aab2749a616917df3b23511535f413604"
-#   LOCAL
-#)
-
 HunterGate(
     URL "https://github.com/cpp-pm/hunter/archive/v0.24.14.tar.gz"
     SHA1 "00901c19eefc02d24b16705b5f5a2b4f093a73fb"
     LOCAL
 )
 
-project(koinos_grpc VERSION 1.0.0 LANGUAGES CXX C)
+project(koinos_grpc VERSION 1.1.0 LANGUAGES CXX C)
 add_compile_definitions(KOINOS_MAJOR_VERSION=${PROJECT_VERSION_MAJOR})
 add_compile_definitions(KOINOS_MINOR_VERSION=${PROJECT_VERSION_MINOR})
 add_compile_definitions(KOINOS_PATCH_VERSION=${PROJECT_VERSION_PATCH})
