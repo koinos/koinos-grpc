@@ -13,7 +13,7 @@
 #include <koinos/util/hex.hpp>
 #include <koinos/util/services.hpp>
 
-#include <koinos/grpc/grpc.hpp>
+#include <koinos/services/grpc.hpp>
 
 #define _GRPC_SYNC_METHOD_DEFINITION( r, svc, method )                                  \
 ::grpc::Status koinos_service::method( ::grpc::ServerContext* context,                  \

@@ -1,34 +1,11 @@
-#include <atomic>
-#include <chrono>
-#include <csignal>
-#include <filesystem>
-#include <iostream>
-#include <mutex>
-
-#include <boost/asio.hpp>
-#include <boost/asio/signal_set.hpp>
-#include <boost/asio/system_timer.hpp>
-#include <boost/program_options.hpp>
-
-#include <yaml-cpp/yaml.h>
-
 #include <grpcpp/security/server_credentials.h>
 #include <grpcpp/grpcpp.h>
 
-#include <koinos/broadcast/broadcast.pb.h>
-#include <koinos/exception.hpp>
-#include <koinos/grpc/grpc.hpp>
-#include <koinos/mq/client.hpp>
-#include <koinos/mq/request_handler.hpp>
-#include <koinos/rpc/mempool/mempool_rpc.pb.h>
-#include <koinos/util/conversion.hpp>
-#include <koinos/util/options.hpp>
-#include <koinos/util/random.hpp>
-#include <koinos/util/services.hpp>
-
+#include <koinos/account_history/account_history.grpc.pb.h>
+#include <koinos/services/grpc.hpp>
 #include <koinos/util/base58.hpp>
-
-#include "git_version.h"
+#include <koinos/util/conversion.hpp>
+#include <koinos/util/services.hpp>
 
 int main( int argc, char** argv )
 {
