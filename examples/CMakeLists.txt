@@ -2,9 +2,9 @@ if (NOT BUILD_EXAMPLES)
   return()
 endif()
 
-add_executable(koinos_grpc_client_demo koinos_grpc_client_example.cpp)
+add_executable(koinos_grpc_client_example koinos_grpc_client_example.cpp)
 target_link_libraries(
-  koinos_grpc_client_demo
+  koinos_grpc_client_example
     PRIVATE
       grpc
       Koinos::proto
@@ -12,9 +12,7 @@ target_link_libraries(
       gRPC::grpc++_reflection
       protobuf::libprotobuf)
 
-koinos_add_format(TARGET koinos_grpc_client_demo)
+koinos_add_format(TARGET koinos_grpc_client_example)
 
+koinos_install(TARGETS koinos_grpc_client_example)
 
-koinos_install(
-  TARGETS
-    koinos_grpc_client_demo)

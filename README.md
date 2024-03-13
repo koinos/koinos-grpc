@@ -7,9 +7,10 @@ This program implements the gRPC microservice, the tracking of unconfirmed trans
 This project's structure follows the [Pitchfork](https://api.csswg.org/bikeshed/?force=1&url=https://raw.githubusercontent.com/vector-of-bool/pitchfork/develop/data/spec.bs) specification.
 
 ```
-├── build/   # An ephemeral directory for building the project. Not checked in, but excluded via .gitignore.
-├── src/     # Contains all source code and private headers for Koinos gRPC.
-└── tests/   # Contains tests for Koinos gRPC.
+├── build/    # An ephemeral directory for building the project. Not checked in, but excluded via .gitignore.
+├── examples/ # Contains all source code and private headers for Koinos gRPC examples.
+├── src/      # Contains all source code and private headers for Koinos gRPC.
+└── tests/    # Contains tests for Koinos gRPC.
 ```
 
 ### Building
