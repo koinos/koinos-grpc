@@ -1,10 +1,10 @@
-//#include <algorithm>
+// #include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <csignal>
 #include <filesystem>
-//#include <iostream>
-//#include <mutex>
+// #include <iostream>
+// #include <mutex>
 #include <vector>
 
 #include <boost/asio.hpp>
@@ -74,8 +74,8 @@ int main( int argc, char** argv )
   std::atomic< uint64_t > request_count = 0;
 
   boost::asio::io_context server_ioc, client_ioc;
-  auto client          = koinos::mq::client( client_ioc );
-  auto timer           = boost::asio::system_timer( server_ioc );
+  auto client = koinos::mq::client( client_ioc );
+  auto timer  = boost::asio::system_timer( server_ioc );
 
   timer_func_type timer_func = [ & ]( const boost::system::error_code& ec )
   {

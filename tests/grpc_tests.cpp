@@ -37,23 +37,23 @@ BOOST_AUTO_TEST_CASE( split_entry_test )
 {
   std::vector< std::string > list{ "service.method1", "service.method2", "service", "service.", ".method" };
 
-  auto [ svc1, method1 ] = koinos::services::split_list_entry( list[0] );
+  auto [ svc1, method1 ] = koinos::services::split_list_entry( list[ 0 ] );
   BOOST_REQUIRE( svc1 == "service" );
   BOOST_REQUIRE( method1 == "method1" );
 
-  auto [ svc2, method2 ] = koinos::services::split_list_entry( list[1] );
+  auto [ svc2, method2 ] = koinos::services::split_list_entry( list[ 1 ] );
   BOOST_REQUIRE( svc2 == "service" );
   BOOST_REQUIRE( method2 == "method2" );
 
-  auto [ svc3, method3 ] = koinos::services::split_list_entry( list[2] );
+  auto [ svc3, method3 ] = koinos::services::split_list_entry( list[ 2 ] );
   BOOST_REQUIRE( svc3 == "service" );
   BOOST_REQUIRE( method3.empty() );
 
-  auto [ svc4, method4 ] = koinos::services::split_list_entry( list[3] );
+  auto [ svc4, method4 ] = koinos::services::split_list_entry( list[ 3 ] );
   BOOST_REQUIRE( svc4 == "service" );
   BOOST_REQUIRE( method4.empty() );
 
-  auto [ svc5, method5 ] = koinos::services::split_list_entry( list[4] );
+  auto [ svc5, method5 ] = koinos::services::split_list_entry( list[ 4 ] );
   BOOST_REQUIRE( svc5.empty() );
   BOOST_REQUIRE( method5 == "method" );
 }
