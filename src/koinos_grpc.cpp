@@ -1,10 +1,10 @@
-#include <algorithm>
+//#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <csignal>
 #include <filesystem>
-#include <iostream>
-#include <mutex>
+//#include <iostream>
+//#include <mutex>
 #include <vector>
 
 #include <boost/asio.hpp>
@@ -19,13 +19,9 @@
 #include <grpcpp/server_builder.h>
 #include <grpcpp/server_context.h>
 
-#include <koinos/broadcast/broadcast.pb.h>
 #include <koinos/exception.hpp>
 #include <koinos/mq/client.hpp>
-#include <koinos/mq/request_handler.hpp>
-#include <koinos/rpc/mempool/mempool_rpc.pb.h>
 #include <koinos/services/grpc.hpp>
-#include <koinos/util/conversion.hpp>
 #include <koinos/util/options.hpp>
 #include <koinos/util/random.hpp>
 #include <koinos/util/services.hpp>
@@ -78,7 +74,6 @@ int main( int argc, char** argv )
   std::atomic< uint64_t > request_count = 0;
 
   boost::asio::io_context server_ioc, client_ioc;
-  auto request_handler = koinos::mq::request_handler( server_ioc );
   auto client          = koinos::mq::client( client_ioc );
   auto timer           = boost::asio::system_timer( server_ioc );
 
@@ -270,10 +265,6 @@ int main( int argc, char** argv )
     LOG( info ) << "Connecting AMQP client...";
     client.connect( amqp_url );
     LOG( info ) << "Established AMQP client connection to the server";
-
-    LOG( info ) << "Connecting AMQP request handler...";
-    request_handler.connect( amqp_url );
-    LOG( info ) << "Established request handler connection to the AMQP server";
 
     LOG( info ) << "Listening for requests on " << endpoint;
     server->Wait();

@@ -1,8 +1,6 @@
 #pragma once
 
 #include <chrono>
-#include <memory>
-#include <utility>
 #include <vector>
 
 #include <boost/preprocessor.hpp>
@@ -11,8 +9,6 @@
 
 #include <grpcpp/server.h>
 
-#include <koinos/crypto/multihash.hpp>
-#include <koinos/exception.hpp>
 #include <koinos/mq/client.hpp>
 
 #include <koinos/rpc/services.grpc.pb.h>

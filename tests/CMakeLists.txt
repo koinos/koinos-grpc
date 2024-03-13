@@ -19,7 +19,7 @@ target_link_libraries(
       Koinos::log
       Koinos::proto
       Koinos::util
-      gRPC::grpc)
+      gRPC::grpc++)
 
 target_include_directories(
   grpc_tests

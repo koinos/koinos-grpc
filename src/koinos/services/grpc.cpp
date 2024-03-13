@@ -1,17 +1,7 @@
-#include <chrono>
-#include <functional>
-#include <tuple>
-
-#include <boost/multiprecision/cpp_int.hpp>
-
-#include <koinos/chain/value.pb.h>
-#include <koinos/mempool/mempool.pb.h>
-#include <koinos/protocol/protocol.pb.h>
-
-#include <koinos/util/base58.hpp>
 #include <koinos/util/conversion.hpp>
-#include <koinos/util/hex.hpp>
 #include <koinos/util/services.hpp>
+
+#include <koinos/exception.hpp>
 
 #include <koinos/services/grpc.hpp>
 
@@ -59,8 +49,6 @@
   }
 
 #define GRPC_SYNC_METHOD_DEFINITIONS( svc, args ) BOOST_PP_SEQ_FOR_EACH( _GRPC_SYNC_METHOD_DEFINITION, svc, args )
-
-using namespace std::chrono_literals;
 
 namespace koinos::services {
 

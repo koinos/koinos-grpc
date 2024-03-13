@@ -19,29 +19,15 @@ target_include_directories(
 
 koinos_add_format(TARGET grpc)
 
-#add_executable(koinos_grpc_client_demo koinos_grpc_client_demo.cpp)
-#target_link_libraries(
-#  koinos_grpc_client_demo
-#    PRIVATE
-#      grpc
-#      Koinos::git
-#      Koinos::proto
-#      gRPC::grpc++
-#      gRPC::grpc++_reflection
-#      protobuf::libprotobuf)
-#
-#koinos_add_format(TARGET koinos_grpc_client_demo)
-#
 add_executable(koinos_grpc koinos_grpc.cpp)
 target_link_libraries(
- koinos_grpc
-   PRIVATE
-     grpc
-     Boost::program_options
-     gRPC::grpc++
-     Koinos::git
-     protobuf::libprotobuf
-     yaml-cpp)
+  koinos_grpc
+    PRIVATE
+      grpc
+      Boost::program_options
+      gRPC::grpc++
+      Koinos::git
+      protobuf::libprotobuf)
 
 target_include_directories(
   koinos_grpc
