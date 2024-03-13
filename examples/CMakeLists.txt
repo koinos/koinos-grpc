@@ -2,7 +2,7 @@ if (NOT BUILD_EXAMPLES)
   return()
 endif()
 
-add_executable(koinos_grpc_client_demo koinos_grpc_client_demo.cpp)
+add_executable(koinos_grpc_client_demo koinos_grpc_client_example.cpp)
 target_link_libraries(
   koinos_grpc_client_demo
     PRIVATE
