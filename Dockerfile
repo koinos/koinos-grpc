@@ -31,4 +31,4 @@ RUN apk update && \
         musl \
         libstdc++
 COPY --from=builder /build/src/koinos_grpc /usr/local/bin
-ENTRYPOINT [ "/usr/local/bin/koinos_koinos_grpc" ]
+ENTRYPOINT [ "/usr/local/bin/koinos_grpc" ]
